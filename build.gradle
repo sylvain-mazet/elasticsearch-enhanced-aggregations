@@ -1,0 +1,107 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        jcenter()
+    }
+    dependencies {
+        classpath 'io.plugind.builders.elasticsearch:gradle-plugin:0.4.0'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'elasticsearch.esplugin'
+apply plugin: 'idea'
+apply plugin: 'maven-publish'
+
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
+    }
+}
+
+ext {
+    buildVersion = '1.1.0'
+
+    licenseFile = file('LICENSE.txt')
+    noticeFile = file('NOTICE.txt')
+}
+
+group = 'com.softbridge.elasticsearch'
+version = buildVersion+'-es' + elasticsearch + '-SNAPSHOT'
+description = "Histograms in pipeline aggregator"
+
+dependencies {
+    compile(group: 'org.elasticsearch', name: 'elasticsearch', version: elasticsearch)
+    compile("ch.qos.logback:logback-classic:1.1.7")
+    compile("ch.qos.logback:logback-core:1.1.7")
+    compile("org.slf4j:jul-to-slf4j:1.7.13")
+    compile("org.slf4j:slf4j-api:1.7.12")
+    configurations {
+        compile.exclude module: 'slf4j-log4j12'
+        runtime.exclude module: 'logback-classic'
+        runtime.exclude module: 'logback-core'
+        runtime.exclude module: 'jul-to-slf4j'
+        runtime.exclude module: 'slf4j-api'
+
+        runtime.exclude module: 'x-pack-transport'
+        runtime.exclude module: 'x-pack-api'
+
+        runtime.exclude module: 'jackson-databind'
+        runtime.exclude module: 'jackson-annotations'
+    }
+
+    // testing with spring
+    def spring_version = '4.2.8.RELEASE'
+    testCompile(group: 'org.hamcrest', name: 'hamcrest-all', version: '1.3')
+    testCompile(group: 'org.springframework', name: 'spring-test', version: spring_version)
+    testCompile(group: 'org.springframework', name: 'spring-context', version: spring_version)
+    testCompile(group: 'org.springframework', name: 'spring-core', version: spring_version)
+    testCompile(group: 'org.springframework', name: 'spring-beans', version: spring_version)
+    testCompile(group: 'org.springframework', name: 'spring-aop', version: spring_version)
+    testCompile(group: 'org.springframework', name: 'spring-expression', version: spring_version)
+    testCompile(group: 'org.springframework', name: 'spring-jdbc', version: spring_version)
+
+
+    // need spring data elasticsearch instance for testing
+    // see application.properties file for configuration of the connection
+    // this code is in github at https://github.com/flefebure/spring-data-elasticsearch
+    testCompile('org.springframework.data:spring-data-elasticsearch:2.3.1.SOFTBRIDGE-SNAPSHOT')
+
+    // need the es client stuff
+    compile(group: 'org.elasticsearch.client', name:'x-pack-transport',version: elasticsearch)
+    compile(group: 'org.elasticsearch.client', name:'transport', version: elasticsearch)
+
+    // gradle does not import jackson automatically
+    // when using spring data elasticsearch
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: jackson
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: jackson
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: jackson
+
+    repositories {
+        mavenLocal()
+        maven { 'url' 'http://artifacts.elastic.co/maven'}
+        mavenCentral()
+    }
+}
+
+configurations.all {
+
+    resolutionStrategy {
+        force 'org.elasticsearch:jna:4.5.1'
+        forcedModules = ['org.elasticsearch:jna:4.5.1']
+    }
+}
+
+
+esplugin {
+    name 'enhanced-aggregations'
+    version rootProject.version
+    description 'Histograms in pipeline aggregator'
+    classname 'org.elasticsearch.plugin.EnhancedAggregationsPlugin'
+    hasClientJar=true
+}
+dependencyLicenses.enabled = false
+thirdPartyAudit.enabled = false
+

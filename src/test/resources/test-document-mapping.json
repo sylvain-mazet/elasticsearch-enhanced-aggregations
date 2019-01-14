@@ -1,0 +1,20 @@
+{
+  "enhanced_aggregations_tests": {
+    "properties": {
+      "id": {
+        "type": "key   word",
+        "index": "not_analyzed"
+      },
+      "category": {
+        "type": "keyword"
+      },
+      "date": {
+        "type": "date",
+        "format": "epoch_millis"
+      },
+      "doubleValue": {
+        "type": "double"
+      }
+    }
+  }
+}
